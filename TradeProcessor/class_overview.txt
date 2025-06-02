@@ -1,0 +1,140 @@
+
+Class: Order
+  Methods:
+    - Order(...)
+  Members:
+    - int orderId
+    - std::string symbol
+    - OrderType type
+    - double price
+    - int quantity
+    - std::chrono::system_clock::time_point timestamp
+    - OrderStatus status
+
+Class: OrderIdGenerator
+  Methods:
+    - int getNextId()
+  Members:
+    - std::atomic<int> id_
+
+Class: BuyOrderComparator / SellOrderComparator
+  Methods:
+    - bool operator()(const Order*, const Order*) const
+  Members:
+    - None
+
+Class: OrderBook
+  Methods:
+    - void addOrder(const Order&)
+    - void cancelOrder(int orderId)
+    - void modifyOrder(const Order&)
+    - void matchOrders()
+    - void printOrderBook()
+  Members:
+    - std::priority_queue<Order*, ..., BuyOrderComparator> buyOrders_
+    - std::priority_queue<Order*, ..., SellOrderComparator> sellOrders_
+    - std::unordered_map<int, Order*> allOrders_
+
+Class: ThreadSafeQueue<T>
+  Methods:
+    - void push(const T&)
+    - void push(T&&)
+    - T wait_and_pop()
+    - bool try_pop(T&)
+    - size_t getSize() const
+  Members:
+    - std::queue<T> queue_
+    - std::mutex mutex_
+    - std::condition_variable condVar_
+
+Class: IAdapter (interface)
+  Methods:
+    - virtual void start(int) = 0
+    - virtual void stop() = 0
+    - virtual void restart(int)
+    - virtual bool isStopped() const = 0
+    - virtual std::string status() const = 0
+    - virtual void putOneMsg(const TradeEvent&) {}
+    - virtual void putOneMsg(const MDataEvent&) {}
+  Members:
+    - None
+
+Class: ExchangeAdapter : public IAdapter
+  Methods:
+    - void start(int)
+    - void stop()
+    - void restart(int)
+    - bool isStopped() const
+    - std::string status() const
+    - void putOneMsg(const TradeEvent&)
+  Members:
+    - std::string name_
+    - ThreadSafeQueue<TradeEvent>& queue_
+    - std::atomic<int> eventCount_
+    - std::atomic<bool> stopRequested_
+    - std::atomic<AdapterState> state_
+    - std::atomic<bool> terminateRequested_
+    - std::thread worker_
+    - OrderIdGenerator orderIdGen_
+    - std::mutex mtx_
+    - std::condition_variable cv_
+
+Class: MarketDataAdapter : public IAdapter
+  Methods:
+    - void start(int)
+    - void stop()
+    - void restart(int)
+    - bool isStopped() const
+    - std::string status() const
+    - void putOneMsg(const MDataEvent&)
+  Members:
+    - Same as ExchangeAdapter but uses MDataEvent
+
+Class: TradeProcessor
+  Methods:
+    - void start()
+    - void stop()
+    - std::string status() const
+  Members:
+    - ThreadSafeQueue<TradeEvent>& queue_
+    - std::atomic<bool> stopRequested_
+    - std::thread worker_
+
+Class: MarketDataProcessor
+  Methods:
+    - void start()
+    - void stop()
+    - std::string status() const
+  Members:
+    - ThreadSafeQueue<MDataEvent>& queue_
+    - std::atomic<bool> stopRequested_
+    - std::thread worker_
+
+Class: TradeProcessorManager
+  Methods:
+    - void start()
+    - void stop()
+    - std::string status() const
+  Members:
+    - TradeProcessor tradeProcessor_
+    - MarketDataProcessor mdProcessor_
+
+Class: AdapterFactory
+  Methods:
+    - static std::unique_ptr<IAdapter> createAdapter(const std::string&, ThreadSafeQueue<TradeEvent>&)
+    - static std::unique_ptr<IAdapter> createAdapter(const std::string&, ThreadSafeQueue<MDataEvent>&)
+  Members:
+    - None
+
+Class: AdapterManager
+  Methods:
+    - void registerAdapter(const std::string&, std::unique_ptr<IAdapter>)
+    - void startAdapter(const std::string&, int)
+    - void startAll(int)
+    - void restartAdapter(const std::string&, int)
+    - void stopAll()
+    - void doneForDay()
+    - void printStatus() const
+    - IAdapter* getAdapter(const std::string&) const
+  Members:
+    - std::unordered_map<std::string, std::unique_ptr<IAdapter>> adapters_
