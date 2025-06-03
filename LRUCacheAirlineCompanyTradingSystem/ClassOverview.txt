@@ -1,0 +1,77 @@
+====================
+1. LRUCache
+====================
+- **Purpose**: O(1) time LRU cache.
+- **Classes**:
+  - `LRUCache`
+    - Members:
+      - `capacity`: int
+      - `cacheList`: std::list<std::pair<int, int>> (MRU -> LRU)
+      - `cacheMap`: unordered_map<int, list::iterator>
+    - Methods:
+      - `get(int key)` → int
+      - `put(int key, int value)`
+      - `printCache()`
+
+====================
+2. LRUCacheSet
+====================
+- **Purpose**: LRU cache using set+timestamp.
+- **Classes**:
+  - `LRUCacheSet`
+    - Members:
+      - `capacity`: int
+      - `timestamp`: int
+      - `cache`: set<Entry>
+      - `key_map`: unordered_map<int, set::iterator>
+    - Methods:
+      - `get(int key)` → int
+      - `put(int key, int value)`
+      - `print()`
+
+====================
+3. Airline Company
+====================
+- **Main Class**: `AirlineCompany`
+  - Holds:
+    - `airplanes`: map<string, shared_ptr<Airplane>>
+    - `flights`: map<string, shared_ptr<Flight>>
+    - `crewMembers`: map<string, shared_ptr<CrewMember>>
+  - Methods:
+    - `addAirplane`, `addFlight`, `addCrewMemberToFlight`
+    - `bookFlight`, `freeSeats`, `getPassengerList`
+    - `scheduleFlight`, `findPassengerByName`, `switchSeat`
+
+- **Supporting Classes**:
+  - `Flight`: owns seats and passengers, references Airplane
+    - Methods: `addPassenger`, `addCrewMember`, `printSchedule`, `printCrew`, `printAvailableSits`
+  - `Airplane`: owns seats
+  - `Passenger`: references Seat + Flight
+  - `Seat`: references Airplane + Passenger
+  - `CrewMember`: references Flight
+
+====================
+4. Trading System
+====================
+- **Main Managers (Singletons)**:
+  - `ExchangeRegistry`: stores all exchanges.
+  - `SecurityManager`: stores and manages securities.
+  - `Router`: validates orders and sends to OrderBook.
+  - `OrderBookManager`: owns `OrderBook`s by symbol.
+  - `FixEngine`: handles FIX messages and connects to `FixConnector`.
+
+- **Core Classes**:
+  - `Security`: symbol, lastPrice, exchange IDs
+  - `Exchange`: name, feePercentage, trading hours
+  - `Order`: price, quantity, status, trades, FIX info
+  - `Trade`: price, quantity, timestamp, buy/sell orders
+  - `OrderBook`: priority queues, matches Buy/Sell
+  - `FixConnector`: sends/receives FIX messages
+
+- **Data Flow**:
+  1. FIX/New Order → `FixEngine`
+  2. `FixEngine` → `OrderBookManager`
+  3. `OrderBookManager` → `Router`
+  4. `Router` validates → sends to `OrderBook`
+  5. `OrderBook` → matches → creates `Trade`
+  6. `FixEngine` sends Execution Reports
