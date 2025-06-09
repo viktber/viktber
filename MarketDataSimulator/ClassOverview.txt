@@ -1,0 +1,90 @@
+
+Logger
+Methods:
+start()
+stop()
+log(LogLevel, const std::string&)
+
+info/warn/error/debug(...)
+
+Members:
+queue_, queueMutex_, condVar_, worker_, running_, printLock
+LogEvent
+Members:
+timestamp, threadId, level, message
+=========================================
+MarketData
+Methods:
+start()
+stop()
+status()
+isRunning()
+wait_till_done()
+marketDataFeed() [coroutine]
+Members:
+queue_, running_, thread_, all_done_, cv_alldone
+
+TradeProcessor
+Methods:
+start()
+stop()
+join()
+status()
+updateMarket(...)
+checkStrategy(...)
+Members:
+queue_, thread_, running_, market_, strategies_
+
+IStrategy (Interface)
+Methods:
+onQuote(const MarketDataUpdate&, const QuoteBook&) = 0
+
+NarrowSpreadStrategy : IStrategy
+Methods:
+onQuote(...)
+Members:
+spreadLimits_
+
+PriceBreakoutStrategy : IStrategy
+Methods:
+onQuote(...)
+Members:
+windowSize_, priceWindow_
+
+MovingAvCStrategy : IStrategy
+Methods:
+onQuote(...)
+Members:
+shortWindow_, longWindow_, priceHistory_, lastSignal_
+
+ThreadSafeQueue
+Methods:
+push(...)
+wait_and_pop()
+try_pop()
+empty()
+getSize()
+
+Members:
+queue_, mutex_, condVar_
+
+MarketDataUpdate
+Members:
+symbol, lastPrice, bidPrice, bidSize, askPrice, askSize, timestamp
+quoteToStr(), printTime()
+
+QuoteBook
+Members:
+bestBidPrice, bidSize, bestAskPrice, askSize, timestamp
+
+Info (Singleton)
+Methods:
+getSecurity(), getPrice(), getQuantity()
+Members:
+secData, secDist, priceDist, qtyDist, gen, rd
+
+Types
+MDataEvent: std::variant<MarketDataUpdate, StopSignal>
+StopSignal: Marker struct
+
+signalSide: Enum { Buy, Sell }
