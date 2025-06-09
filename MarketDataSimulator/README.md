@@ -1,3 +1,5 @@
+Better read as row
+
 Simulated Trading Engine (C++23)
 This project is a multithreaded simulated trading system implemented in modern C++23. 
 It features coroutine-driven market data generation, a thread-safe event queue, 
